@@ -1,0 +1,9 @@
+token: YOUR_DISCORD_TOKEN
+files: audio/*.mp3
+default:
+  interval: 960
+  annoyance: 0.2
+servers:
+  - name: ExampleServer
+    interval: 3600
+    annoyance: 1
