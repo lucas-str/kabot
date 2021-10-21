@@ -1,0 +1,12 @@
+[Unit]
+Description=Kabot
+
+[Service]
+User=pi
+RestartSec=120
+Restart=always
+WorkingDirectory=/home/pi/kabot
+ExecStart=/home/pi/kabot/env/bin/python -u /home/pi/kabot/kabot.py /home/pi/kabot/kabot.yaml
+
+[Install]
+WantedBy=multi-user.target
