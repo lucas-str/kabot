@@ -15,14 +15,18 @@ import discord
 
 from yaml import safe_load
 
+
 class Kabot(discord.Client):
     """Kabot"""
 
     def __init__(self, conf):
-        super().__init__()
+        intents = discord.Intents.default()
+        intents.typing = False
+        intents.presences = False
+        super().__init__(intents=intents)
         self._conf = conf
         self._files = []
-        audio_expr = conf.get('files')
+        audio_expr = conf.get("files")
         if isinstance(audio_expr, str):
             audio_expr = [audio_expr]
         for expr in audio_expr:
@@ -37,10 +41,10 @@ class Kabot(discord.Client):
     def _create_tasks(self):
         """Create guild tasks"""
         for guild in self.guilds:
-            interval = self._conf['default']['interval']
-            for conf in self._conf['servers']:
-                if conf['name'] == guild.name:
-                    interval = conf.get('interval') or interval
+            interval = self._conf["default"]["interval"]
+            for conf in self._conf["servers"]:
+                if conf["name"] == guild.name:
+                    interval = conf.get("interval") or interval
                     break
             task = asyncio.create_task(self.guild_timer(guild, interval))
             self._tasks.append(task)
@@ -48,7 +52,7 @@ class Kabot(discord.Client):
     async def on_ready(self):
         """On ready"""
         logging.info("Logged in as %s", self.user)
-        logging.info("Guilds: %s", ', '.join([guild.name for guild in self.guilds]))
+        logging.info("Guilds: %s", ", ".join([guild.name for guild in self.guilds]))
         self._create_tasks()
 
     async def speech(self, voice_chan):
@@ -58,7 +62,7 @@ class Kabot(discord.Client):
         try:
             audio_source = discord.FFmpegPCMAudio(audio_file)
         except Exception as err:
-            print(err)
+            logging.error(err)
             return
         try:
             voice_client = await voice_chan.connect()
@@ -75,13 +79,12 @@ class Kabot(discord.Client):
 
     async def guild_task(self, guild):
         """Check for users in guild voice channels"""
-        annoyance = self._conf['default']['annoyance']
-        for conf in self._conf['servers']:
-            if conf['name'] == guild.name:
-                annoyance = conf.get('annoyance') or annoyance
+        annoyance = self._conf["default"]["annoyance"]
+        for conf in self._conf["servers"]:
+            if conf["name"] == guild.name:
+                annoyance = conf.get("annoyance") or annoyance
                 break
         for voice_chan in guild.voice_channels:
-            #print(f"{voice_chan.name} {len(voice_chan.members)}")
             if len(voice_chan.members) > 0 and random() <= annoyance:
                 await self.speech(voice_chan)
 
@@ -101,22 +104,24 @@ class Kabot(discord.Client):
         await super().close()
         logging.info("Logged out")
 
+
 async def main(conf):
     """Main function"""
-    logging.basicConfig(format='%(asctime)s %(message)s', level=logging.INFO)
+    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     kabot = Kabot(conf)
     loop = asyncio.get_event_loop()
     for sig in (SIGINT, SIGTERM):
         loop.add_signal_handler(sig, lambda: asyncio.ensure_future(kabot.close()))
-    await kabot.start(conf['token'])
+    await kabot.start(conf["token"])
     logging.info("Exiting")
 
+
 if len(sys.argv) != 2:
-    print("usage: {argv[0]} <CONF>")
+    print(f"usage: {sys.argv[0]} <CONF>")
     sys.exit(1)
 
 try:
-    with open(sys.argv[1], 'r') as conf_file:
+    with open(sys.argv[1], "r", encoding="utf-8") as conf_file:
         cfg = safe_load(conf_file)
 except (FileNotFoundError, PermissionError) as err:
     print(f"Failed to parse configuration: {err}")
