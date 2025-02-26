@@ -5,14 +5,12 @@
 import asyncio
 import logging
 import sys
-
 from glob import glob
 from os.path import isfile
-from random import random, randint
+from random import randint, random
 from signal import SIGINT, SIGTERM
 
 import discord
-
 from yaml import safe_load
 
 
@@ -105,7 +103,7 @@ class Kabot(discord.Client):
         logging.info("Logged out")
 
 
-async def main(conf):
+async def kabot(conf):
     """Main function"""
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     kabot = Kabot(conf)
@@ -116,15 +114,20 @@ async def main(conf):
     logging.info("Exiting")
 
 
-if len(sys.argv) != 2:
-    print(f"usage: {sys.argv[0]} <CONF>")
-    sys.exit(1)
+def main():
+    if len(sys.argv) != 2:
+        print(f"usage: {sys.argv[0]} <CONF>")
+        sys.exit(1)
 
-try:
-    with open(sys.argv[1], "r", encoding="utf-8") as conf_file:
-        cfg = safe_load(conf_file)
-except (FileNotFoundError, PermissionError) as err:
-    print(f"Failed to parse configuration: {err}")
-    sys.exit(1)
+    try:
+        with open(sys.argv[1], "r", encoding="utf-8") as conf_file:
+            cfg = safe_load(conf_file)
+    except (FileNotFoundError, PermissionError) as err:
+        print(f"Failed to parse configuration: {err}")
+        sys.exit(1)
 
-asyncio.run(main(cfg))
+    asyncio.run(kabot(cfg))
+
+
+if __name__ == "__main__":
+    main()

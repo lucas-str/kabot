@@ -1,0 +1,26 @@
+[project]
+name = "kabot"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "lucas-str",email = "lucas.sturelle@ik.me"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml (>=6.0.2,<7.0.0)",
+    "discord-py[voice] (>=2.5.0,<3.0.0)"
+]
+
+[project.scripts]
+kabot = 'kabot:main'
+
+[tool.poetry]
+
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1.394"
+ruff = "^0.9.7"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
