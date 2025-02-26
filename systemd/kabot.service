@@ -2,11 +2,12 @@
 Description=Kabot
 
 [Service]
-User=pi
+User=kabot
 RestartSec=120
 Restart=always
-WorkingDirectory=/home/pi/kabot
-ExecStart=/home/pi/kabot/env/bin/python -u /home/pi/kabot/kabot.py /home/pi/kabot/kabot.yaml
+WorkingDirectory=/home/kabot/kabot
+Environment=VIRTUAL_ENV=/home/kabot/kabot/env
+ExecStart=$VIRTUAL_ENV/bin/python -u kabot.py kabot.yaml
 
 [Install]
 WantedBy=multi-user.target
