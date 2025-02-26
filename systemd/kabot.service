@@ -6,8 +6,7 @@ User=kabot
 RestartSec=120
 Restart=always
 WorkingDirectory=/home/kabot/kabot
-Environment=VIRTUAL_ENV=/home/kabot/kabot/env
-ExecStart=$VIRTUAL_ENV/bin/python -u kabot.py kabot.yaml
+ExecStart=/home/kabot/kabot/env/bin/python -u kabot.py kabot.yaml
 
 [Install]
 WantedBy=multi-user.target
