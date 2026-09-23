@@ -55,7 +55,9 @@ class Kabot(discord.Client):
 
     async def speech(self, voice_chan):
         """Make a speech on the specified voice channel"""
-        logging.info("Speech on %s", voice_chan.name)
+        logging.info(
+            "Speech on %s for %d members", voice_chan.name, len(voice_chan.members)
+        )
         audio_file = self._files[randint(0, len(self._files) - 1)]
         try:
             audio_source = discord.FFmpegPCMAudio(audio_file)
