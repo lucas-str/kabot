@@ -6,12 +6,15 @@ import asyncio
 import logging
 import sys
 from glob import glob
+from os import environ
 from os.path import isfile
 from random import randint, random
 from signal import SIGINT, SIGTERM
 
 import discord
 from yaml import safe_load
+
+logger = logging.getLogger(__name__)
 
 
 class Kabot(discord.Client):
@@ -33,7 +36,7 @@ class Kabot(discord.Client):
                 if isfile(audio_file):
                     self._files.append(audio_file)
                 else:
-                    logging.error("%s is not a file", audio_file)
+                    logger.error("%s is not a file", audio_file)
         self._tasks = []
 
     def _create_tasks(self):
@@ -49,32 +52,34 @@ class Kabot(discord.Client):
 
     async def on_ready(self):
         """On ready"""
-        logging.info("Logged in as %s", self.user)
-        logging.info("Guilds: %s", ", ".join([guild.name for guild in self.guilds]))
+        logger.info("Logged in as %s", self.user)
+        logger.info("Guilds: %s", ", ".join([guild.name for guild in self.guilds]))
         self._create_tasks()
 
-    async def speech(self, voice_chan):
-        """Make a speech on the specified voice channel"""
-        logging.info(
-            "Speech on %s for %d members", voice_chan.name, len(voice_chan.members)
+    async def play_random_clip(self, voice_chan):
+        """Play a random audio clip on the specified voice channel"""
+        logger.info(
+            "Playing audio clip on %s for %d members",
+            voice_chan.name,
+            len(voice_chan.members),
         )
         audio_file = self._files[randint(0, len(self._files) - 1)]
         try:
             audio_source = discord.FFmpegPCMAudio(audio_file)
         except Exception as err:
-            logging.error(err)
+            logger.error(err)
             return
         try:
             voice_client = await voice_chan.connect()
         except Exception as err:
-            logging.error(err)
+            logger.error(err)
             return
         try:
             voice_client.play(audio_source)
             while voice_client.is_playing():
                 await asyncio.sleep(1)
         except Exception as err:
-            logging.error(err)
+            logger.error(err)
         await voice_client.disconnect()
 
     async def guild_task(self, guild):
@@ -86,7 +91,7 @@ class Kabot(discord.Client):
                 break
         for voice_chan in guild.voice_channels:
             if len(voice_chan.members) > 0 and random() <= annoyance:
-                await self.speech(voice_chan)
+                await self.play_random_clip(voice_chan)
 
     async def guild_timer(self, guild, interval):
         """Launch guild task at each interval"""
@@ -102,18 +107,30 @@ class Kabot(discord.Client):
         for task in self._tasks:
             task.cancel()
         await super().close()
-        logging.info("Logged out")
+        logger.info("Logged out")
+
+
+def configure_logging():
+    """Configure logging, omitting the timestamp when journald already adds one"""
+    if "JOURNAL_STREAM" in environ:
+        logging.basicConfig(format="[%(name)s] %(message)s", level=logging.INFO)
+    else:
+        logging.basicConfig(
+            format="%(asctime)s [%(name)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+            level=logging.INFO,
+        )
 
 
 async def kabot(conf):
     """Main function"""
-    logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
+    configure_logging()
     kabot = Kabot(conf)
     loop = asyncio.get_event_loop()
     for sig in (SIGINT, SIGTERM):
         loop.add_signal_handler(sig, lambda: asyncio.ensure_future(kabot.close()))
     await kabot.start(conf["token"])
-    logging.info("Exiting")
+    logger.info("Exiting")
 
 
 def main():
